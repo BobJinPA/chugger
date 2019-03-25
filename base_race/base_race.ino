@@ -61,8 +61,8 @@ void loop()
     right = itemOn(RIGHT_PLATE);
 
     printStatus(left, right);
-    Serial.println(leftTime);
-    Serial.println(rightTime);
+    Serial.println("Left Time: " + String(leftTime));
+    Serial.println("Right Time: " + String(rightTime));
 
     tempTime = millis();
     Serial.println("  LeftUp: " + String(leftUp));
@@ -83,6 +83,7 @@ void loop()
         }
       }
     }
+    Serial.println("  RightUp: " + String(rightUp));
 
     if (rightUp == false)
     {
@@ -101,15 +102,16 @@ void loop()
         }
       }
     }
-
-    delay(10);
-
+    delay(500);
+    //delay(10);
     if ((leftTime != 0) && (rightTime != 0))
     {
+      Serial.println("     check before complete" + String(leftTime) + ", " + String(rightTime));
       done = true;
     }
     else
     {
+      Serial.println("     check before not complete" + String(leftTime) + ", " + String(rightTime));
       done = false;
     }
   } while (done == false);
