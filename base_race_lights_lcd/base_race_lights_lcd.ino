@@ -1,3 +1,4 @@
+#include <LiquidCrystal.h>
 
 const int LEFT_PLATE = A0;  // Pin connected to FSR/resistor divider
 const int RIGHT_PLATE = A1; // Pin connected to FSR/resistor divider
@@ -15,7 +16,7 @@ long tempTime;
 bool leftUp;
 bool rightUp;
 bool fault;  
-
+const int buzzer = 8;
 const int YELLOW_L = 13;
 const int YELLOW_R = 12;
 const int ORANGE = 11;
@@ -30,6 +31,8 @@ int green[] = {GREEN};
 int arrSize;
 const int PACE = 300;
 
+LiquidCrystal lcd(2,3,4,5,6,7);
+
 void setup()
 {
   pinMode(LEFT_PLATE, INPUT);
@@ -40,7 +43,9 @@ void setup()
   pinMode(GREEN, OUTPUT);
   pinMode(RED_L, OUTPUT);
   pinMode(RED_R, OUTPUT);
+  pinMode(buzzer, OUTPUT);
   set_pins(allPins, 6, LOW);
+  lcd.begin(16, 2);
   Serial.begin(9600);
   fault = false;
   intro_sequence();
@@ -54,10 +59,11 @@ void loop()
   rightUp = false;
   
   Serial.println("Before Getting Ready");
-
+  postLcdMessages("Welcome to", "  the CHUGGER");
   start_sequence();
   // Getting Ready
   Serial.println("After Getting Ready");
+  postLcdMessages("Put your drinks", "on to start");
   do
   {
     left = itemOn(LEFT_PLATE);
@@ -65,6 +71,7 @@ void loop()
 
     if (left == true){
       digitalWrite(YELLOW_L, HIGH); 
+      postLcdMessages("Player 1 ready","");
     }
     else
     {
@@ -73,6 +80,7 @@ void loop()
 
     if (right == true){
       digitalWrite(YELLOW_R, HIGH); 
+      postLcdMessages("Player 2 ready","");
     }
     else
     {
@@ -92,6 +100,7 @@ void loop()
   } while (done == false);
 
   Serial.println("Get ready");
+  postLcdMessages("Drink on Green", "Wait for it");
   delay(5000);
 
   start_sequence();
@@ -111,6 +120,10 @@ void loop()
     Serial.println("Right Time: " + String(rightTime));
 
     tempTime = millis();
+
+    String elapsedTime = convertMills(tempTime - startTime);
+    postLcdMessages("Drink!", elapsedTime + " seconds");
+    
     Serial.println("  LeftUp: " + String(leftUp));
     if (leftUp == false)
     {
@@ -270,9 +283,10 @@ void fault_sequence(String side){
   for (int i = 0; i < 12; i++) {
     digitalWrite(sidePin, HIGH); 
     //buzzer on
+    tone(buzzer, 3000);
     delay(PACE/2);
     digitalWrite(sidePin, LOW); 
-    //buzzer off
+    noTone(buzzer);
     delay(PACE/2);
   }
   digitalWrite(sidePin, HIGH); 
@@ -317,30 +331,44 @@ void cycle_sequence(){
 // after everything
 void set_winner_leds(){
   if (fault == true){
-  set_pins(allPins, 6, LOW);
-  if (leftTime == -1){
-    set_pins(yellow[1], 1, HIGH);
-    set_pins(red[0], 1, HIGH);
-    fault = true;
-  }
-  else if (rightTime == -1) {
-    set_pins(yellow[0], 1, HIGH);
-    set_pins(red[1], 1, HIGH);
-    fault = true;
-  }
-  else {
-    set_pins(red, 2, HIGH);
-  }
+    set_pins(allPins, 6, LOW);
+    if (leftTime == -1){
+      set_pins(yellow[1], 1, HIGH);
+      set_pins(red[0], 1, HIGH);
+      postLcdMessages("Player 2 wins!","");
+      delay(1000);
+      postLcdMessages("Player 1 cheats " , "Player 2: " + convertMills(rightTime));
+    }
+    else if (rightTime == -1) {
+      set_pins(yellow[0], 1, HIGH);
+      set_pins(red[1], 1, HIGH);
+      postLcdMessages("Player 1 wins!","");
+      delay(1000);
+      postLcdMessages("Player 1: " + convertMills(leftTime), "Player 2 cheats" );
+    }
+    else {
+      set_pins(red, 2, HIGH);
+      postLcdMessages("Everybody cheats!","And got caught");
+    }
   }
   else {
     if (leftTime == rightTime){
       set_pins(yellow, 2, HIGH);
+      postLcdMessages("A Tie!!", "");
+      delay(500);
+      postLcdMessages("A Tie!!", "You both suck");
     }
     else if (leftTime < rightTime) {
       set_pins(yellow[0], 1, HIGH);
+      postLcdMessages("Player 1 wins!","");
+      delay(1000);
+      postLcdMessages("Player 1: " + convertMills(leftTime), "Player 2: " + convertMills(rightTime));
     }
     else {
       set_pins(yellow[1], 1, HIGH);
+      postLcdMessages("Player 2 wins!","");
+      delay(1000);
+      postLcdMessages("Player 1: " + convertMills(leftTime), "Player 2: " + convertMills(rightTime));
     }
   }
 }
@@ -393,3 +421,19 @@ float calculateForce(int pin)
   }
   return force;
 }
+
+void clearRow(int row){
+  lcd.setCursor(0, row);
+  lcd.write("                ");
+}
+
+void postLcdMessages(String row1, String row2){
+    clearRow(0);
+    clearRow(1);
+    lcd.setCursor(0,0);
+    lcd.write(row1);
+    lcd.setCursor(0,1);
+    lcd.write(row2);
+}
+
+
