@@ -16,7 +16,7 @@ long tempTime;
 bool leftUp;
 bool rightUp;
 bool fault;  
-const int buzzer = 8;
+const int BUZZER = 8;
 const int YELLOW_L = 13;
 const int YELLOW_R = 12;
 const int ORANGE = 11;
@@ -43,7 +43,7 @@ void setup()
   pinMode(GREEN, OUTPUT);
   pinMode(RED_L, OUTPUT);
   pinMode(RED_R, OUTPUT);
-  pinMode(buzzer, OUTPUT);
+  pinMode(BUZZER, OUTPUT);
   set_pins(allPins, 6, LOW);
   lcd.begin(16, 2);
   Serial.begin(9600);
@@ -282,11 +282,11 @@ void fault_sequence(String side){
   }
   for (int i = 0; i < 12; i++) {
     digitalWrite(sidePin, HIGH); 
-    //buzzer on
-    tone(buzzer, 3000);
+    //BUZZER on
+    tone(BUZZER, 3000);
     delay(PACE/2);
     digitalWrite(sidePin, LOW); 
-    noTone(buzzer);
+    noTone(BUZZER);
     delay(PACE/2);
   }
   digitalWrite(sidePin, HIGH); 
