@@ -283,7 +283,7 @@ void fault_sequence(String side){
   for (int i = 0; i < 12; i++) {
     digitalWrite(sidePin, HIGH); 
     //BUZZER on
-    tone(BUZZER, 3000);
+    tone(BUZZER, 300);
     delay(PACE/2);
     digitalWrite(sidePin, LOW); 
     noTone(BUZZER);

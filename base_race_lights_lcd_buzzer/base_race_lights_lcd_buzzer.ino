@@ -115,9 +115,23 @@ void loop()
 
   Serial.println("Get ready");
   postLcdMessages("Drink on Green", "   Wait for it!");
+  delay(2000);
   
-  delay(5000);
-
+//  for (int i = 4 ; i = 0; i--){
+//    postLcdMessages("Green flashes", "Staring in " + String(i + 1));
+//    delay(1000);
+//  }
+    postLcdMessages("Flash series", "Starting in 5");
+    delay(1000);
+    postLcdMessages("Flash series", "Starting in 4");
+    delay(1000);
+    postLcdMessages("Flash series", "Starting in 3");
+    delay(1000);
+    postLcdMessages("Flash series", "Starting in 2");
+    delay(1000);
+    postLcdMessages("Flash series", "Starting in 1");
+    delay(1000);
+  
   start_sequence();
 
   Serial.println("Go");
@@ -177,7 +191,7 @@ void loop()
         }
       }
     }
-    delay(10);
+    //delay(10);
     
     if ((leftTime != 0) && (rightTime != 0))
     {
@@ -195,11 +209,9 @@ void loop()
   Serial.println("Right time = " + convertMills(rightTime));
 
   Serial.println("I think we are done");
+  set_pins(allPins, 6, LOW);
   set_winner_leds();
 
-  Serial.println("---Enjoying some time until next round");
-  delay(1000);
-  
   do
   {
     left = itemOn(LEFT_PLATE);
@@ -221,12 +233,9 @@ void loop()
 
 
 
-
-
-
-
-
 //----------------------------------------------------------
+
+
 
 void set_pins(int pins[], int num, int setting){
   for(int i = 0;i < num; i++){  
@@ -257,6 +266,7 @@ void start_sequence(){
         left = itemOn(LEFT_PLATE);
         if (left == false) {
           fault_sequence("LEFT");
+          left_fault = true;
         }
       }
 
@@ -264,6 +274,7 @@ void start_sequence(){
         right = itemOn(RIGHT_PLATE);
         if (right == false) {
           fault_sequence("RIGHT");
+          right_fault = true;
         }
       }
 
@@ -299,27 +310,23 @@ void fault_sequence(String side){
   set_pins(allPins, 6, LOW);
   int sidePin;
   if (side == "LEFT") {
-    left_fault = true;
     sidePin = RED_L;
     leftUp = true;
-    leftTime = -1;
   } else {
-    right_fault = true;
     sidePin = RED_R;  
-    rightTime = -1;
     rightUp = true;
   }
   
   //rewrite to not block
-  for (int i = 0; i < 12; i++) {
-    digitalWrite(sidePin, HIGH); 
-    //BUZZER on
-    tone(BUZZER, 300);
-    delay(PACE/2);
-    digitalWrite(sidePin, LOW); 
-    noTone(BUZZER);
-    delay(PACE/2);
-  }
+//  for (int i = 0; i < 12; i++) {
+//    digitalWrite(sidePin, HIGH); 
+//    //BUZZER on
+//    tone(BUZZER, 300);
+//    delay(PACE/2);
+//    digitalWrite(sidePin, LOW); 
+//    noTone(BUZZER);
+//    delay(PACE/2);
+//  }
   digitalWrite(sidePin, HIGH); 
   Serial.println("End Fault Sequence");
 }
@@ -365,42 +372,54 @@ void set_winner_leds(){
   Serial.println("Start Set Winner");
     set_pins(allPins, 6, LOW);
     if ((left_fault == true) && (right_fault == false)){
-      set_pins(yellow[1], 1, HIGH);
-      set_pins(red[0], 1, HIGH);
+      // player 1 faulted and player 2 wins with a score
+      digitalWrite(YELLOW_R, HIGH); 
+      digitalWrite(RED_L, HIGH); 
       postLcdMessages("Player 2 wins!","");
       delay(1000);
       postLcdMessages("Player 1 cheats " , "Player 2: " + convertMills(rightTime));
     }
     
     else if ((left_fault == false) && (right_fault == true)){
-      set_pins(yellow[0], 1, HIGH);
-      set_pins(red[1], 1, HIGH);
+      // player 2 faults and player 2 wins with a score
+      digitalWrite(YELLOW_L, HIGH); 
+      digitalWrite(RED_R, HIGH); 
       postLcdMessages("Player 1 wins!","");
       delay(1000);
       postLcdMessages("Player 1: " + convertMills(leftTime), "Player 2 cheats" );
     }
     
     else if ((left_fault == true) && (right_fault == true)){
-      set_pins(red, 2, HIGH);
+      // players 1 and 2 fault
+      digitalWrite(RED_L, HIGH); 
+      digitalWrite(RED_R, HIGH); 
+      postLcdMessages("Everybody cheats!","");
+      delay(1000);
       postLcdMessages("Everybody cheats!","And got caught!");
     }
   
     else if (leftTime == rightTime){
-      set_pins(yellow, 2, HIGH);
+      // players 1 and 2 tie
+      digitalWrite(YELLOW_L, HIGH); 
+      digitalWrite(YELLOW_R, HIGH); 
       postLcdMessages("A Tie!!", "");
       delay(1000);
-      postLcdMessages("A Tie!!", "You both suck");
+      postLcdMessages("A Tie! Hmmm", "Score: " + convertMills(leftTime));
     }
     
     else if (leftTime < rightTime) {
-      set_pins(yellow[0], 1, HIGH);
+      // both complete and player 1 wins
+      digitalWrite(YELLOW_L, HIGH); 
+      digitalWrite(RED_R, HIGH); 
       postLcdMessages("Player 1 wins!","");
       delay(1000);
       postLcdMessages("Player 1: " + convertMills(leftTime), "Player 2: " + convertMills(rightTime));
     }
     
     else {
-      set_pins(yellow[1], 1, HIGH);
+      // both complete and player 2 wins
+      digitalWrite(YELLOW_R, HIGH); 
+      digitalWrite(RED_L, HIGH); 
       postLcdMessages("Player 2 wins!","");
       delay(1000);
       postLcdMessages("Player 1: " + convertMills(leftTime), "Player 2: " + convertMills(rightTime));
